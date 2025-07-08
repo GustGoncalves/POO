@@ -1,5 +1,6 @@
-package model;
+package connection;
 
+import dao.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -74,8 +75,18 @@ public class Database {
                     "status TEXT," +
                     "FOREIGN KEY(inscricaoId) REFERENCES inscricoes(id))");
 
+            // Tabela de Valores de Inscrição
+            stmt.execute("CREATE TABLE IF NOT EXISTS valores_inscricao (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "tipo_participante TEXT UNIQUE NOT NULL," +
+                    "valor REAL NOT NULL)");
+
+            // Inicializa valores padrão
+            new ValorInscricaoDAO().inicializarValoresPadrao();
+
         } catch (SQLException e) {
             System.err.println("Erro ao inicializar banco de dados: " + e.getMessage());
+            throw new RuntimeException("Falha na inicialização do banco de dados", e);
         }
     }
 }

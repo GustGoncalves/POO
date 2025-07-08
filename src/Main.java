@@ -1,7 +1,10 @@
+import connection.Database;
 import model.*;
+import dao.*;
 import exceptions.*;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -9,18 +12,28 @@ public class Main {
     private static Administrador adminLogado = null;
     private static Participante participanteLogado = null;
 
+    // Instâncias dos DAOs
+    private static AdministradorDAO administradorDAO = new AdministradorDAO();
+    private static ParticipanteDAO participanteDAO = new ParticipanteDAO();
+    private static EventoDAO eventoDAO = new EventoDAO();
+    private static AtividadeDAO atividadeDAO = new AtividadeDAO();
+    private static InscricaoDAO inscricaoDAO = new InscricaoDAO();
+    private static PagamentoDAO pagamentoDAO = new PagamentoDAO();
+    private static ValorInscricaoDAO valorInscricaoDAO = new ValorInscricaoDAO();
+
     public static void main(String[] args) {
         try {
             Database.initializeDatabase();
             exibirMenuPrincipal();
         } catch (Exception e) {
             System.err.println("Erro no sistema: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             scanner.close();
         }
     }
 
-    private static void exibirMenuPrincipal() throws SQLException {
+    private static void exibirMenuPrincipal() throws SQLException, EntidadeNaoEncontradaException, SenhaFracaException, EmailInvalidoException, EmailDuplicadoException {
         while (true) {
             System.out.println("\n=== SISTEMA DE GERENCIAMENTO DE EVENTOS ACADÊMICOS ===");
             System.out.println("1. Login Administrador");
@@ -51,13 +64,13 @@ public class Main {
         }
     }
 
-    private static void loginAdministrador() throws SQLException {
+    private static void loginAdministrador() throws SQLException, EntidadeNaoEncontradaException {
         System.out.print("\nUsuário: ");
         String usuario = scanner.nextLine();
         System.out.print("Senha: ");
         String senha = scanner.nextLine();
 
-        adminLogado = Administrador.login(usuario, senha);
+        adminLogado = administradorDAO.login(usuario, senha);
         if (adminLogado != null) {
             System.out.println("Login realizado com sucesso!");
             menuAdministrador();
@@ -72,7 +85,7 @@ public class Main {
         System.out.print("Senha: ");
         String senha = scanner.nextLine();
 
-        participanteLogado = Participante.login(usuario, senha);
+        participanteLogado = participanteDAO.login(usuario, senha);
         if (participanteLogado != null) {
             System.out.println("Login realizado com sucesso!");
             menuParticipante();
@@ -81,7 +94,7 @@ public class Main {
         }
     }
 
-    private static void cadastrarParticipante() throws SQLException {
+    private static void cadastrarParticipante() throws SQLException, SenhaFracaException, EmailInvalidoException, EmailDuplicadoException {
         System.out.println("\n=== CADASTRO DE PARTICIPANTE ===");
         System.out.print("Nome: ");
         String nome = scanner.nextLine();
@@ -116,18 +129,23 @@ public class Main {
                 return;
         }
 
-        participante.cadastrar();
+        participanteDAO.cadastrar(participante);
         System.out.println("Participante cadastrado com sucesso!");
     }
 
-    private static void menuAdministrador() throws SQLException {
+    private static void menuAdministrador() throws SQLException, EntidadeNaoEncontradaException {
         while (true) {
             System.out.println("\n=== MENU ADMINISTRADOR ===");
             System.out.println("1. Criar Evento");
             System.out.println("2. Listar Eventos");
-            System.out.println("3. Adicionar Atividade");
-            System.out.println("4. Listar Inscrições");
-            System.out.println("5. Confirmar Pagamento");
+            System.out.println("3. Editar Evento");
+            System.out.println("4. Excluir Evento");
+            System.out.println("5. Adicionar Atividade");
+            System.out.println("6. Listar Participantes por Evento");
+            System.out.println("7. Listar Participantes por Atividade");
+            System.out.println("8. Listar Todas Inscrições com Status");
+            System.out.println("9. Confirmar Pagamento");
+            System.out.println("10. Definir Valores de Inscrição");
             System.out.println("0. Logout");
             System.out.print("Escolha uma opção: ");
 
@@ -139,16 +157,31 @@ public class Main {
                     criarEvento();
                     break;
                 case 2:
-                    Evento.listarEventos();
+                    listarEventos();
                     break;
                 case 3:
-                    adicionarAtividade();
+                    editarEvento();
                     break;
                 case 4:
-                    Inscricao.listarInscricoes();
+                    excluirEvento();
                     break;
                 case 5:
-                    confirmarPagamento();
+                    adicionarAtividade();
+                    break;
+                case 6:
+                    listarParticipantesPorEvento();
+                    break;
+                case 7:
+                    listarParticipantesPorAtividade();
+                    break;
+                case 8:
+                    listarInscricoesComStatus();
+                    break;
+                case 9:
+                    confirmarPagamentoAdmin();
+                    break;
+                case 10:
+                    definirValoresInscricao();
                     break;
                 case 0:
                     adminLogado = null;
@@ -171,13 +204,95 @@ public class Main {
         String dataFim = scanner.nextLine();
 
         Evento evento = new Evento(nome, descricao, dataInicio, dataFim);
-        evento.salvar();
+        eventoDAO.salvar(evento);
         System.out.println("Evento criado com sucesso!");
+    }
+
+    private static void listarEventos() throws SQLException {
+        List<Evento> eventos = eventoDAO.listarTodos();
+
+        System.out.println("\n=== LISTA DE EVENTOS ===");
+        for (Evento evento : eventos) {
+            System.out.println("ID: " + evento.getId());
+            System.out.println("Nome: " + evento.getNome());
+            System.out.println("Descrição: " + evento.getDescricao());
+            System.out.println("Data Início: " + evento.getDataInicio());
+            System.out.println("Data Fim: " + evento.getDataFim());
+            System.out.println("----------------------");
+        }
+    }
+
+    private static void editarEvento() throws SQLException {
+        System.out.println("\n=== EDITAR EVENTO ===");
+
+        // Lista todos os eventos disponíveis
+        listarEventos();
+
+        System.out.print("ID do Evento a editar: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Limpar buffer
+
+        try {
+            // Busca o evento existente no banco de dados
+            Evento eventoExistente = eventoDAO.buscarPorId(id);
+
+            System.out.println("\nEditando Evento ID: " + eventoExistente.getId());
+            System.out.println("[Deixe em branco para manter o valor atual]");
+
+            // Solicita novos valores, mostrando os atuais como referência
+            System.out.print("Novo Nome (" + eventoExistente.getNome() + "): ");
+            String nome = scanner.nextLine();
+
+            System.out.print("Nova Descrição (" + eventoExistente.getDescricao() + "): ");
+            String descricao = scanner.nextLine();
+
+            System.out.print("Nova Data de Início (" + eventoExistente.getDataInicio() + "): ");
+            String dataInicio = scanner.nextLine();
+
+            System.out.print("Nova Data de Fim (" + eventoExistente.getDataFim() + "): ");
+            String dataFim = scanner.nextLine();
+
+            // Cria objeto com os valores atualizados (mantém os antigos se novos forem vazios)
+            Evento eventoAtualizado = new Evento(
+                    nome.isEmpty() ? eventoExistente.getNome() : nome,
+                    descricao.isEmpty() ? eventoExistente.getDescricao() : descricao,
+                    dataInicio.isEmpty() ? eventoExistente.getDataInicio() : dataInicio,
+                    dataFim.isEmpty() ? eventoExistente.getDataFim() : dataFim
+            );
+            eventoAtualizado.setId(id);
+
+            // Atualiza no banco de dados
+            eventoDAO.atualizar(eventoAtualizado);
+            System.out.println("\nEvento atualizado com sucesso!");
+
+            // Mostra os dados atualizados
+            System.out.println("\nDados atualizados:");
+            System.out.println("Nome: " + eventoAtualizado.getNome());
+            System.out.println("Descrição: " + eventoAtualizado.getDescricao());
+            System.out.println("Data Início: " + eventoAtualizado.getDataInicio());
+            System.out.println("Data Fim: " + eventoAtualizado.getDataFim());
+
+        } catch (EntidadeNaoEncontradaException e) {
+            System.out.println("\nErro: " + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("\nErro ao atualizar evento: " + e.getMessage());
+        }
+    }
+
+    private static void excluirEvento() throws SQLException {
+        System.out.println("\n=== EXCLUIR EVENTO ===");
+        listarEventos();
+        System.out.print("ID do Evento a excluir: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+
+        eventoDAO.excluir(id);
+        System.out.println("Evento excluído com sucesso!");
     }
 
     private static void adicionarAtividade() throws SQLException {
         System.out.println("\n=== ADICIONAR ATIVIDADE ===");
-        Evento.listarEventos();
+        listarEventos();
         System.out.print("ID do Evento: ");
         int eventoId = scanner.nextInt();
         scanner.nextLine();
@@ -195,23 +310,122 @@ public class Main {
         String tipo = scanner.nextLine();
 
         Atividade atividade = new Atividade(eventoId, nome, descricao, data, limite, tipo);
-        atividade.salvar();
+        atividadeDAO.salvar(atividade);
         System.out.println("Atividade adicionada com sucesso!");
     }
 
-    private static void confirmarPagamento() throws SQLException {
+    private static void listarParticipantesPorEvento() throws SQLException {
+        System.out.println("\n=== LISTAR PARTICIPANTES POR EVENTO ===");
+        listarEventos();
+        System.out.print("ID do Evento: ");
+        int eventoId = scanner.nextInt();
+        scanner.nextLine();
+
+        List<Participante> participantes = administradorDAO.listarParticipantesPorEvento(eventoId);
+
+        System.out.println("\n=== PARTICIPANTES INSCRITOS ===");
+        for (Participante p : participantes) {
+            System.out.println("ID: " + p.getId());
+            System.out.println("Nome: " + p.getNome());
+            System.out.println("Email: " + p.getEmail());
+            System.out.println("Tipo: " + p.getTipo());
+            System.out.println("----------------------");
+        }
+    }
+
+    private static void listarParticipantesPorAtividade() throws SQLException {
+        System.out.println("\n=== LISTAR PARTICIPANTES POR ATIVIDADE ===");
+        listarEventos();
+        System.out.print("ID do Evento: ");
+        int eventoId = scanner.nextInt();
+        scanner.nextLine();
+
+        listarAtividadesDoEvento(eventoId);
+        System.out.print("ID da Atividade: ");
+        int atividadeId = scanner.nextInt();
+        scanner.nextLine();
+
+        List<Participante> participantes = administradorDAO.listarParticipantesPorAtividade(atividadeId);
+
+        System.out.println("\n=== PARTICIPANTES INSCRITOS ===");
+        for (Participante p : participantes) {
+            System.out.println("ID: " + p.getId());
+            System.out.println("Nome: " + p.getNome());
+            System.out.println("Email: " + p.getEmail());
+            System.out.println("Tipo: " + p.getTipo());
+            System.out.println("----------------------");
+        }
+    }
+
+    private static void listarInscricoesComStatus() throws SQLException {
+        List<InscricaoDAO.InscricaoInfo> inscricoes = inscricaoDAO.listarTodas();
+
+        System.out.println("\n=== TODAS AS INSCRIÇÕES ===");
+        for (InscricaoDAO.InscricaoInfo i : inscricoes) {
+            System.out.println("ID: " + i.getId());
+            System.out.println("Participante: " + i.getParticipante());
+            System.out.println("Evento: " + i.getEvento());
+            System.out.println("Atividade: " + i.getAtividade());
+            System.out.println("Data: " + i.getDataInscricao());
+            System.out.println("Status: " + (i.getStatusPagamento() == null ? "PENDENTE" : i.getStatusPagamento()));
+            System.out.println("Valor: " + i.getValor());
+            System.out.println("----------------------");
+        }
+    }
+
+    private static void confirmarPagamentoAdmin() throws SQLException, EntidadeNaoEncontradaException {
         System.out.println("\n=== CONFIRMAR PAGAMENTO ===");
-        Inscricao.listarInscricoesComPagamentoPendente();
+        List<InscricaoDAO.InscricaoInfo> inscricoesPendentes = inscricaoDAO.listarComPagamentoPendente();
+
+        System.out.println("\n=== INSCRIÇÕES COM PAGAMENTO PENDENTE ===");
+        for (InscricaoDAO.InscricaoInfo inscricao : inscricoesPendentes) {
+            System.out.println("ID: " + inscricao.getId());
+            System.out.println("Participante: " + inscricao.getParticipante());
+            System.out.println("Evento: " + inscricao.getEvento());
+            System.out.println("Atividade: " + inscricao.getAtividade());
+            System.out.println("Status: " + (inscricao.getStatusPagamento() == null ? "PENDENTE" : inscricao.getStatusPagamento()));
+            System.out.println("----------------------");
+        }
+
         System.out.print("ID da Inscrição: ");
         int inscricaoId = scanner.nextInt();
         scanner.nextLine();
 
-        System.out.print("Valor Pago: ");
+        pagamentoDAO.confirmarPagamento(inscricaoId);
+        System.out.println("Pagamento confirmado com sucesso!");
+    }
+
+    private static void definirValoresInscricao() throws SQLException {
+        System.out.println("\n=== DEFINIR VALORES DE INSCRIÇÃO ===");
+        System.out.println("1. Definir valor para Alunos");
+        System.out.println("2. Definir valor para Professores");
+        System.out.println("3. Definir valor para Profissionais");
+        System.out.print("Escolha: ");
+        int tipo = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("Valor da Inscrição: ");
         double valor = scanner.nextDouble();
         scanner.nextLine();
 
-        Pagamento.confirmarPagamento(inscricaoId, valor);
-        System.out.println("Pagamento confirmado com sucesso!");
+        String tipoParticipante = "";
+        switch (tipo) {
+            case 1:
+                tipoParticipante = "ALUNO";
+                break;
+            case 2:
+                tipoParticipante = "PROFESSOR";
+                break;
+            case 3:
+                tipoParticipante = "PROFISSIONAL";
+                break;
+            default:
+                System.out.println("Tipo inválido!");
+                return;
+        }
+
+        valorInscricaoDAO.atualizarValor(tipoParticipante, valor);
+        System.out.println("Valor definido com sucesso!");
     }
 
     private static void menuParticipante() throws SQLException {
@@ -230,7 +444,7 @@ public class Main {
 
             switch (opcao) {
                 case 1:
-                    Evento.listarEventos();
+                    listarEventos();
                     break;
                 case 2:
                     inscreverEmEvento();
@@ -239,7 +453,7 @@ public class Main {
                     inscreverEmAtividade();
                     break;
                 case 4:
-                    participanteLogado.listarMinhasInscricoes();
+                    listarMinhasInscricoes();
                     break;
                 case 5:
                     registrarPagamento();
@@ -255,13 +469,13 @@ public class Main {
 
     private static void inscreverEmEvento() throws SQLException {
         System.out.println("\n=== INSCRIÇÃO EM EVENTO ===");
-        Evento.listarEventos();
+        listarEventos();
         System.out.print("ID do Evento: ");
         int eventoId = scanner.nextInt();
         scanner.nextLine();
 
         try {
-            Inscricao.inscreverEmEvento(participanteLogado.getId(), eventoId);
+            inscricaoDAO.inscreverEmEvento(participanteLogado.getId(), eventoId);
             System.out.println("Inscrição realizada com sucesso!");
         } catch (InscricaoDuplicadaException e) {
             System.out.println("Erro: " + e.getMessage());
@@ -270,40 +484,90 @@ public class Main {
 
     private static void inscreverEmAtividade() throws SQLException {
         System.out.println("\n=== INSCRIÇÃO EM ATIVIDADE ===");
-        Evento.listarEventos();
+        listarEventos();
         System.out.print("ID do Evento: ");
         int eventoId = scanner.nextInt();
         scanner.nextLine();
 
-        Atividade.listarAtividadesDoEvento(eventoId);
+        listarAtividadesDoEvento(eventoId);
         System.out.print("ID da Atividade: ");
         int atividadeId = scanner.nextInt();
         scanner.nextLine();
 
         try {
-            Inscricao.inscreverEmAtividade(participanteLogado.getId(), eventoId, atividadeId);
+            inscricaoDAO.inscreverEmAtividade(participanteLogado.getId(), eventoId, atividadeId);
             System.out.println("Inscrição realizada com sucesso!");
         } catch (InscricaoDuplicadaException | AtividadeLotadaException e) {
             System.out.println("Erro: " + e.getMessage());
         }
     }
 
+    private static void listarAtividadesDoEvento(int eventoId) throws SQLException {
+        List<Atividade> atividades = atividadeDAO.listarPorEvento(eventoId);
+
+        System.out.println("\n=== ATIVIDADES DO EVENTO ===");
+        for (Atividade atividade : atividades) {
+            System.out.println("ID: " + atividade.getId());
+            System.out.println("Nome: " + atividade.getNome());
+            System.out.println("Descrição: " + atividade.getDescricao());
+            System.out.println("Data: " + atividade.getData());
+            System.out.println("Vagas: " + atividade.getLimiteInscritos());
+            System.out.println("Tipo: " + atividade.getTipo());
+            System.out.println("----------------------");
+        }
+    }
+
+    private static void listarMinhasInscricoes() throws SQLException {
+        List<InscricaoDAO.InscricaoInfo> inscricoes = inscricaoDAO.listarPorParticipante(participanteLogado.getId());
+
+        System.out.println("\n=== MINHAS INSCRIÇÕES ===");
+        for (InscricaoDAO.InscricaoInfo inscricao : inscricoes) {
+            System.out.println("ID: " + inscricao.getId());
+            System.out.println("Evento: " + inscricao.getEvento());
+            System.out.println("Atividade: " + inscricao.getAtividade());
+            System.out.println("Data: " + inscricao.getDataInscricao());
+            System.out.println("Status Pagamento: " +
+                    (inscricao.getStatusPagamento() == null ? "PENDENTE" : inscricao.getStatusPagamento()));
+            System.out.println("Valor: " + inscricao.getValor());
+            System.out.println("----------------------");
+        }
+    }
+
     private static void registrarPagamento() throws SQLException {
         System.out.println("\n=== REGISTRAR PAGAMENTO ===");
-        participanteLogado.listarMinhasInscricoesComPagamentoPendente();
+        List<InscricaoDAO.InscricaoInfo> inscricoesPendentes =
+                inscricaoDAO.listarComPagamentoPendentePorParticipante(participanteLogado.getId());
+
+        System.out.println("\n=== INSCRIÇÕES COM PAGAMENTO PENDENTE ===");
+        for (InscricaoDAO.InscricaoInfo inscricao : inscricoesPendentes) {
+            System.out.println("ID Inscrição: " + inscricao.getId());
+            System.out.println("Evento: " + inscricao.getEvento());
+            System.out.println("Atividade: " + inscricao.getAtividade());
+            System.out.println("----------------------");
+        }
+
         System.out.print("ID da Inscrição: ");
         int inscricaoId = scanner.nextInt();
         scanner.nextLine();
 
-        System.out.print("Valor Pago: ");
-        double valor = scanner.nextDouble();
-        scanner.nextLine();
-
         try {
-            participanteLogado.registrarPagamento(inscricaoId, valor);
-            System.out.println("Pagamento registrado. Aguarde confirmação do administrador.");
+            // Obtém o valor automaticamente baseado no tipo de participante
+            double valor = valorInscricaoDAO.getValorPorTipo(participanteLogado.getTipo());
+            System.out.println("Valor a pagar: " + valor);
+
+            System.out.print("Confirmar pagamento? (S/N): ");
+            String confirmacao = scanner.nextLine();
+
+            if (confirmacao.equalsIgnoreCase("S")) {
+                pagamentoDAO.registrarPagamento(inscricaoId, valor);
+                System.out.println("Pagamento registrado. Aguarde confirmação do administrador.");
+            } else {
+                System.out.println("Pagamento cancelado.");
+            }
         } catch (PagamentoInvalidoException e) {
             System.out.println("Erro: " + e.getMessage());
+        } catch (EntidadeNaoEncontradaException e) {
+            throw new RuntimeException(e);
         }
     }
 }

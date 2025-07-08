@@ -1,8 +1,6 @@
 package model;
 
-import java.sql.*;
-
-public class Administrador {
+public class Administrador extends Usuario {
     private int id;
     private String usuario;
     private String senha;
@@ -12,25 +10,14 @@ public class Administrador {
         this.senha = senha;
     }
 
-    public static Administrador login(String usuario, String senha) throws SQLException {
-        String sql = "SELECT * FROM administradores WHERE usuario = ? AND senha = ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    // Getters e Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getUsuario() { return usuario; }
+    public String getSenha() { return senha; }
 
-            stmt.setString(1, usuario);
-            stmt.setString(2, senha);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                Administrador admin = new Administrador(usuario, senha);
-                admin.id = rs.getInt("id");
-                return admin;
-            }
-        }
-        return null;
-    }
-
-    public int getId() {
-        return id;
+    @Override
+    public boolean isAdmin() {
+        return true;
     }
 }

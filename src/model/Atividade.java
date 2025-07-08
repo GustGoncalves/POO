@@ -1,7 +1,5 @@
 package model;
 
-import java.sql.*;
-
 public class Atividade {
     private int id;
     private int eventoId;
@@ -20,44 +18,24 @@ public class Atividade {
         this.tipo = tipo;
     }
 
-    public void salvar() throws SQLException {
-        String sql = "INSERT INTO atividades (eventoId, nome, descricao, data, limiteInscritos, tipo) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    // Getters e Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public int getEventoId() { return eventoId; }
+    public void setEventoId(int eventoId) { this.eventoId = eventoId; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public String getData() { return data; }
+    public void setData(String data) { this.data = data; }
+    public int getLimiteInscritos() { return limiteInscritos; }
+    public void setLimiteInscritos(int limiteInscritos) { this.limiteInscritos = limiteInscritos; }
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
 
-            stmt.setInt(1, eventoId);
-            stmt.setString(2, nome);
-            stmt.setString(3, descricao);
-            stmt.setString(4, data);
-            stmt.setInt(5, limiteInscritos);
-            stmt.setString(6, tipo);
-            stmt.executeUpdate();
-
-            ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                this.id = rs.getInt(1);
-            }
-        }
-    }
-
-    public static void listarAtividadesDoEvento(int eventoId) throws SQLException {
-        String sql = "SELECT * FROM atividades WHERE eventoId = ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, eventoId);
-            ResultSet rs = stmt.executeQuery();
-
-            System.out.println("\n=== ATIVIDADES DO EVENTO ===");
-            while (rs.next()) {
-                System.out.println("ID: " + rs.getInt("id"));
-                System.out.println("Nome: " + rs.getString("nome"));
-                System.out.println("Descrição: " + rs.getString("descricao"));
-                System.out.println("Data: " + rs.getString("data"));
-                System.out.println("Vagas: " + rs.getInt("limiteInscritos"));
-                System.out.println("Tipo: " + rs.getString("tipo"));
-                System.out.println("----------------------");
-            }
-        }
+    @Override
+    public String toString() {
+        return nome + " - " + data + " (" + tipo + ")";
     }
 }

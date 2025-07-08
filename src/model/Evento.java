@@ -1,9 +1,5 @@
 package model;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-
 public class Evento {
     private int id;
     private String nome;
@@ -18,43 +14,20 @@ public class Evento {
         this.dataFim = dataFim;
     }
 
-    public void salvar() throws SQLException {
-        String sql = "INSERT INTO eventos (nome, descricao, dataInicio, dataFim) VALUES (?, ?, ?, ?)";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    // Getters e Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public String getDataInicio() { return dataInicio; }
+    public void setDataInicio(String dataInicio) { this.dataInicio = dataInicio; }
+    public String getDataFim() { return dataFim; }
+    public void setDataFim(String dataFim) { this.dataFim = dataFim; }
 
-            stmt.setString(1, nome);
-            stmt.setString(2, descricao);
-            stmt.setString(3, dataInicio);
-            stmt.setString(4, dataFim);
-            stmt.executeUpdate();
-
-            ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                this.id = rs.getInt(1);
-            }
-        }
-    }
-
-    public static void listarEventos() throws SQLException {
-        String sql = "SELECT * FROM eventos";
-        try (Connection conn = Database.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            System.out.println("\n=== LISTA DE EVENTOS ===");
-            while (rs.next()) {
-                System.out.println("ID: " + rs.getInt("id"));
-                System.out.println("Nome: " + rs.getString("nome"));
-                System.out.println("Descrição: " + rs.getString("descricao"));
-                System.out.println("Data Início: " + rs.getString("dataInicio"));
-                System.out.println("Data Fim: " + rs.getString("dataFim"));
-                System.out.println("----------------------");
-            }
-        }
-    }
-
-    public int getId() {
-        return id;
+    @Override
+    public String toString() {
+        return nome + " (" + dataInicio + " a " + dataFim + ")";
     }
 }
