@@ -87,7 +87,7 @@ Fluxo completo de funcionamento:
 
 3. Certifique-se de ter o driver JDBC do SQLite
 
-4. Execute a classe Main.java ou MainGUI
+4. Execute a classe Main.java ou MainGUI.java
 
 5. O banco de dados eventos.db será criado automaticamente (ou populado, se já existir)
 
