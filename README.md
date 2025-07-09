@@ -91,7 +91,7 @@ sgea/
 │   ├── sqlite-jdbc-3.50.1.0.jar
 ├── out/
 ├── src/
-│   ├── conection/
+│   ├── connection/
 │   │   ├── Database.java
 │   ├── dao/
 │   │   ├── AdministradorDAO.java
