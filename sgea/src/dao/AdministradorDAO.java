@@ -28,38 +28,58 @@ public class AdministradorDAO {
 
     public List<Participante> listarParticipantesPorEvento(int eventoId) throws SQLException {
         List<Participante> participantes = new ArrayList<>();
+        // Verifique os nomes exatos das colunas no seu banco de dados
         String sql = "SELECT p.* FROM participantes p " +
-                "JOIN inscricoes i ON p.id = i.participanteId " +
-                "WHERE i.eventoId = ?";
+                "JOIN inscricoes i ON p.id = i.participanteId " +  // ou participanteId
+                "WHERE i.eventoId = ?";  // ou eventoId
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, eventoId);
-            ResultSet rs = stmt.executeQuery();
 
-            while (rs.next()) {
-                Participante participante;
-                String tipo = rs.getString("tipo");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    try {
+                        Participante participante;
+                        // Convertendo para maiúsculas para garantir o match no switch
+                        String tipo = rs.getString("tipo").toUpperCase().trim();
 
-                switch (tipo) {
-                    case "ALUNO":
-                        participante = new Aluno(rs.getString("nome"), rs.getString("email"),
-                                rs.getString("usuario"), rs.getString("senha"));
-                        break;
-                    case "PROFESSOR":
-                        participante = new Professor(rs.getString("nome"), rs.getString("email"),
-                                rs.getString("usuario"), rs.getString("senha"));
-                        break;
-                    case "PROFISSIONAL":
-                        participante = new Profissional(rs.getString("nome"), rs.getString("email"),
-                                rs.getString("usuario"), rs.getString("senha"));
-                        break;
-                    default:
-                        continue;
+                        switch (tipo) {
+                            case "ALUNO":
+                                participante = new Aluno(
+                                        rs.getString("nome"),
+                                        rs.getString("email"),
+                                        rs.getString("usuario"),
+                                        rs.getString("senha"));
+                                break;
+                            case "PROFESSOR":
+                                participante = new Professor(
+                                        rs.getString("nome"),
+                                        rs.getString("email"),
+                                        rs.getString("usuario"),
+                                        rs.getString("senha"));
+                                break;
+                            case "PROFISSIONAL":
+                                participante = new Profissional(
+                                        rs.getString("nome"),
+                                        rs.getString("email"),
+                                        rs.getString("usuario"),
+                                        rs.getString("senha"));
+                                break;
+                            default:
+                                System.out.println("Tipo desconhecido: " + tipo);
+                                continue;
+                        }
+
+                        participante.setId(rs.getInt("id"));
+                        participantes.add(participante);
+
+                    } catch (SQLException e) {
+                        System.err.println("Erro ao mapear participante: " + e.getMessage());
+                        // Continua para o próximo registro
+                    }
                 }
-                participante.setId(rs.getInt("id"));
-                participantes.add(participante);
             }
         }
         return participantes;
@@ -68,37 +88,48 @@ public class AdministradorDAO {
     public List<Participante> listarParticipantesPorAtividade(int atividadeId) throws SQLException {
         List<Participante> participantes = new ArrayList<>();
         String sql = "SELECT p.* FROM participantes p " +
-                "JOIN inscricoes i ON p.id = i.participanteId " +
-                "WHERE i.atividadeId = ?";
+                "JOIN inscricoes i ON p.id = i.participanteId " +  // Note o participanteId (sem underscore)
+                "WHERE i.atividadeId = ?";  // Note o atividadeId (sem underscore)
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, atividadeId);
-            ResultSet rs = stmt.executeQuery();
 
-            while (rs.next()) {
-                Participante participante;
-                String tipo = rs.getString("tipo");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Participante participante;
+                    String tipo = rs.getString("tipo").toUpperCase(); // Convertendo para maiúsculas
 
-                switch (tipo) {
-                    case "ALUNO":
-                        participante = new Aluno(rs.getString("nome"), rs.getString("email"),
-                                rs.getString("usuario"), rs.getString("senha"));
-                        break;
-                    case "PROFESSOR":
-                        participante = new Professor(rs.getString("nome"), rs.getString("email"),
-                                rs.getString("usuario"), rs.getString("senha"));
-                        break;
-                    case "PROFISSIONAL":
-                        participante = new Profissional(rs.getString("nome"), rs.getString("email"),
-                                rs.getString("usuario"), rs.getString("senha"));
-                        break;
-                    default:
-                        continue;
+                    switch (tipo) {
+                        case "ALUNO":
+                            participante = new Aluno(
+                                    rs.getString("nome"),
+                                    rs.getString("email"),
+                                    rs.getString("usuario"),
+                                    rs.getString("senha"));
+                            break;
+                        case "PROFESSOR":
+                            participante = new Professor(
+                                    rs.getString("nome"),
+                                    rs.getString("email"),
+                                    rs.getString("usuario"),
+                                    rs.getString("senha"));
+                            break;
+                        case "PROFISSIONAL":
+                            participante = new Profissional(
+                                    rs.getString("nome"),
+                                    rs.getString("email"),
+                                    rs.getString("usuario"),
+                                    rs.getString("senha"));
+                            break;
+                        default:
+                            System.out.println("Tipo de participante desconhecido: " + tipo);
+                            continue;
+                    }
+                    participante.setId(rs.getInt("id"));
+                    participantes.add(participante);
                 }
-                participante.setId(rs.getInt("id"));
-                participantes.add(participante);
             }
         }
         return participantes;

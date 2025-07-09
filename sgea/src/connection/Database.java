@@ -1,10 +1,7 @@
 package connection;
 
 import dao.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class Database {
     private static final String URL = "jdbc:sqlite:eventos.db";
