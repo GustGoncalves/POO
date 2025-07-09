@@ -100,7 +100,7 @@ sgea/
 ## Como Executar
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/seu-usuario/sistema-eventos.git
+   git clone https://github.com/GustGoncalves/POO.git
 
 2. Abra o projeto em sua IDE Java (Ex: IntelliJ, Eclipse ou VS Code)
 
