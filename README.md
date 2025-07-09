@@ -141,15 +141,6 @@ sgea/
 
 5. O banco de dados eventos.db será criado automaticamente (ou populado, se já existir)
 
-## Diferenciais
-- Interface gráfica completa e responsiva
-
-- Validação de regras de negócio com exceções customizadas
-
-- Código modular e bem organizado
-
-- Fácil manutenção e expansão
-
 ## Released under MIT License
 
 Copyright (c) 2013 Mark Otto.
