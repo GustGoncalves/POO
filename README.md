@@ -80,38 +80,53 @@ Fluxo completo de funcionamento:
 
 ## Estrutura do Projeo
 
+```
 sgea/
+├── .idea/
+├── docs/
+│   ├── diagrama-de-casos-de-uso.png
+│   ├── diagrama-de-clsses.png
+│   ├── modelo-de-banco-de-dados.png
 ├── lib/
 │   ├── sqlite-jdbc-3.50.1.0.jar
 ├── out/
 ├── src/
+│   ├── conection/
+│   │   ├── Database.java
 │   ├── dao/
 │   │   ├── AdministradorDAO.java
 │   │   ├── AtividadeDAO.java
 │   │   ├── EventoDAO.java
 │   │   ├── InscricaoDAO.java
-│   │   ├── Pagamento.java
-│   │   ├── Participante.java
-│   │   ├── ValorInscricao.java
+│   │   ├── PagamentoDAO.java
+│   │   ├── ParticipanteDAO.java
+│   │   ├── UsuarioDAO.java
+│   │   ├── ValorInscricaoDAO.java
 │   ├── exceptions/
 │   │   ├── AtividadeLotadaException.java
+│   │   ├── EmailDuplicadoException.java
+│   │   ├── EmailInvalidoException.java
 │   │   ├── EntidadeNaoEncontradaException.java
 │   │   ├── InscricaoDuplicadaException.java
 │   │   ├── PagamentoInvalidoException.java
+│   │   ├── SenhaFracaException.java
 │   ├── model/
 │   │   ├── Administrador.java
 │   │   ├── Aluno.java
 │   │   ├── Atividade.java
-│   │   ├── Database.java
 │   │   ├── Evento.java
 │   │   ├── Inscricao.java
 │   │   ├── Pagamento.java
 │   │   ├── Participante.java
 │   │   ├── Professor.java
 │   │   └── Profissional.java
-│   ├── Main.java
-│   └── MainGUI.java
+│   │   └── Usuario.java
+│   ├── view/
+│   │   └── MainGUI.java
+│   └── Main.java
+├── .gitignore/
 └── eventos.db
+```
 
 ## Como Executar
 1. Clone o repositório:
