@@ -40,7 +40,7 @@ Este projeto é uma aplicação Java com interface gráfica voltada para a organ
 - Valores são configuráveis de acordo com o perfil do participante
 
 ## Tecnologias Utilizadas
-- **Linguagem**: Java
+- **Linguagem**: Java 21
 - **Interface Gráfica**: Java Swing
 - **Banco de Dados**: SQLite (persistência local)
 - **Paradigma**: Programação Orientada a Objetos (POO)
