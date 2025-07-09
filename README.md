@@ -49,40 +49,10 @@ Este projeto é uma aplicação Java com interface gráfica voltada para a organ
   - Tratamento de exceções com `try-catch`
   - Exceções personalizadas para regras de negócio (ex: atividade lotada, inscrição duplicada)
 
-## Funcionalidades Técnicas
-- CRUD completo para:
-  - Usuários (administradores e participantes)
-  - Eventos
-  - Atividades
-  - Inscrições
-  - Pagamentos
-- Controle de acesso com tela de login
-- Validação de dados e mensagens de erro amigáveis
-- Interface intuitiva com separação clara entre áreas de administrador e participante
-
-## Banco de Dados
-- Desenvolvido em **SQLite**
-- Tabelas: `usuarios`, `eventos`, `atividades`, `inscricoes`, `pagamentos`
-- Relacionamentos bem definidos e normalizados
-
-## Diagramas
-- Diagrama de Casos de Uso
-- Diagrama de Classes
-- Modelo Relacional do Banco de Dados
-
-## Demonstração
-Fluxo completo de funcionamento:
-1. Login como administrador ou participante
-2. Cadastro de eventos e atividades
-3. Inscrição de participante
-4. Simulação de pagamento e confirmação manual
-5. Visualização de dados no painel
-
 ## Estrutura do Projeo
 
 ```
 sgea/
-├── .idea/
 ├── docs/
 │   ├── diagrama-de-casos-de-uso.png
 │   ├── diagrama-de-clsses.png
@@ -124,7 +94,6 @@ sgea/
 │   ├── view/
 │   │   └── MainGUI.java
 │   └── Main.java
-├── .gitignore/
 └── eventos.db
 ```
 
@@ -140,6 +109,14 @@ sgea/
 4. Execute a classe Main.java ou MainGUI.java
 
 5. O banco de dados eventos.db será criado automaticamente (ou populado, se já existir)
+
+## Demonstração
+Fluxo completo de funcionamento:
+1. Login como administrador ou participante
+2. Cadastro de eventos e atividades
+3. Inscrição de participante
+4. Simulação de pagamento e confirmação manual
+5. Visualização de dados no painel
 
 ## Released under MIT License
 
