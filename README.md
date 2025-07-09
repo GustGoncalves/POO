@@ -119,7 +119,7 @@ sgea/
 │   │   ├── Pagamento.java
 │   │   ├── Participante.java
 │   │   ├── Professor.java
-│   │   └── Profissional.java
+│   │   ├── Profissional.java
 │   │   └── Usuario.java
 │   ├── view/
 │   │   └── MainGUI.java
