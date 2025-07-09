@@ -78,6 +78,41 @@ Fluxo completo de funcionamento:
 4. Simulação de pagamento e confirmação manual
 5. Visualização de dados no painel
 
+## Estrutura do Projeo
+
+sgea/
+├── lib/
+│   ├── sqlite-jdbc-3.50.1.0.jar
+├── out/
+├── src/
+│   ├── dao/
+│   │   ├── AdministradorDAO.java
+│   │   ├── AtividadeDAO.java
+│   │   ├── EventoDAO.java
+│   │   ├── InscricaoDAO.java
+│   │   ├── Pagamento.java
+│   │   ├── Participante.java
+│   │   ├── ValorInscricao.java
+│   ├── exceptions/
+│   │   ├── AtividadeLotadaException.java
+│   │   ├── EntidadeNaoEncontradaException.java
+│   │   ├── InscricaoDuplicadaException.java
+│   │   ├── PagamentoInvalidoException.java
+│   ├── model/
+│   │   ├── Administrador.java
+│   │   ├── Aluno.java
+│   │   ├── Atividade.java
+│   │   ├── Database.java
+│   │   ├── Evento.java
+│   │   ├── Inscricao.java
+│   │   ├── Pagamento.java
+│   │   ├── Participante.java
+│   │   ├── Professor.java
+│   │   └── Profissional.java
+│   ├── Main.java
+│   └── MainGUI.java
+└── eventos.db
+
 ## Como Executar
 1. Clone o repositório:
    ```bash
