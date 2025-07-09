@@ -66,9 +66,9 @@ Este projeto é uma aplicação Java com interface gráfica voltada para a organ
 - Relacionamentos bem definidos e normalizados
 
 ## Diagramas
-- ✅ Diagrama de Casos de Uso
-- ✅ Diagrama de Classes
-- ✅ Modelo Relacional do Banco de Dados
+- Diagrama de Casos de Uso
+- Diagrama de Classes
+- Modelo Relacional do Banco de Dados
 
 ## Demonstração
 Fluxo completo de funcionamento:
