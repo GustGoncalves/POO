@@ -197,7 +197,7 @@ public class InscricaoDAO {
                         rs.getString("atividade"),
                         null,
                         "PENDENTE",
-                        rs.getObject("valor") != null ? rs.getDouble("valor") : null
+                        rs.getObject("valor") != null ? rs.getDouble("valor") : 0.0
                 ));
             }
         }

@@ -1476,7 +1476,7 @@ public class MainGUI {
             data[i][2] = inscricao.getAtividade();
             data[i][3] = inscricao.getDataInscricao();
             data[i][4] = inscricao.getStatusPagamento() == null ? "PENDENTE" : inscricao.getStatusPagamento();
-            data[i][5] = inscricao.getValor();
+            data[i][5] = inscricao.getValor() != null ? inscricao.getValor() : 0.0;
         }
 
         JTable table = new JTable(data, columnNames);
@@ -1495,6 +1495,15 @@ public class MainGUI {
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
         panel.add(titleLabel, BorderLayout.NORTH);
 
+        DefaultTableModel model = new DefaultTableModel(
+                new Object[]{"ID", "Evento", "Atividade", "Valor"}, 0
+        ) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return columnIndex == 3 ? Double.class : String.class;
+            }
+        };
+
         // Obtém inscrições pendentes do participante
         List<InscricaoDAO.InscricaoInfo> inscricoes = inscricaoDAO.listarComPagamentoPendentePorParticipante(participanteLogado.getId());
 
@@ -1507,10 +1516,15 @@ public class MainGUI {
             data[i][0] = inscricao.getId();
             data[i][1] = inscricao.getEvento();
             data[i][2] = inscricao.getAtividade();
-            data[i][3] = inscricao.getValor();
+            data[i][3] = inscricao.getValor() != null ? inscricao.getValor() : 0.0;
         }
 
-        JTable table = new JTable(data, columnNames);
+        JTable table = new JTable(data, columnNames) {
+            @Override
+            public Class<?> getColumnClass(int column) {
+                return column == 3 ? Double.class : Object.class;
+            }
+        };
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -1522,18 +1536,29 @@ public class MainGUI {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        JLabel valorLabel = new JLabel("Valor: R$ 0,00");
+
         JLabel tipoLabel = new JLabel("Tipo: " + participanteLogado.getTipo());
+        JLabel valorCalculadoLabel = new JLabel("Valor Calculado: R$ 0,00");
 
-        infoPanel.add(valorLabel, gbc);
         infoPanel.add(tipoLabel, gbc);
+        infoPanel.add(valorCalculadoLabel, gbc);
 
-        // Atualiza valor quando seleciona uma inscrição
+        // Atualiza valores quando seleciona uma inscrição
         table.getSelectionModel().addListSelectionListener(e -> {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow != -1) {
-                double valor = (double) table.getValueAt(selectedRow, 3);
-                valorLabel.setText("Valor: R$ " + String.format("%.2f", valor));
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow != -1) {
+                    try {
+
+
+                        // Valor calculado pelo tipo de participante
+                        double valorCalculado = valorInscricaoDAO.getValorPorTipo(participanteLogado.getTipo());
+                        valorCalculadoLabel.setText("Valor Calculado: R$ " + String.format("%.2f", valorCalculado));
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(panel, "Erro ao obter valores: " + ex.getMessage(),
+                                "Erro", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             }
         });
 
@@ -1551,44 +1576,46 @@ public class MainGUI {
                 return;
             }
 
-            int confirm = JOptionPane.showConfirmDialog(panel,
-                    "Confirmar registro de pagamento para esta inscrição?",
-                    "Confirmar Pagamento", JOptionPane.YES_NO_OPTION);
+            try {
+                int inscricaoId = (int) table.getValueAt(selectedRow, 0);
+                double valorCalculado = valorInscricaoDAO.getValorPorTipo(participanteLogado.getTipo());
 
-            if (confirm == JOptionPane.YES_OPTION) {
-                try {
-                    int inscricaoId = (int) table.getValueAt(selectedRow, 0);
-                    double valor = (double) table.getValueAt(selectedRow, 3);
+                // Mostra confirmação com o valor calculado
+                int confirm = JOptionPane.showConfirmDialog(panel,
+                        "Confirmar pagamento de R$ " + String.format("%.2f", valorCalculado) +
+                                " para esta inscrição?",
+                        "Confirmar Pagamento", JOptionPane.YES_NO_OPTION);
 
-                    // Verifica se o PagamentoDAO foi corrigido para usar datetime('now') em vez de NOW()
-                    pagamentoDAO.registrarPagamento(inscricaoId, valor);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    pagamentoDAO.registrarPagamento(inscricaoId, valorCalculado);
                     JOptionPane.showMessageDialog(panel,
                             "Pagamento registrado com sucesso!",
                             "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 
                     // Atualiza a tabela
+                    model.setRowCount(0);
                     List<InscricaoDAO.InscricaoInfo> updatedInscricoes =
                             inscricaoDAO.listarComPagamentoPendentePorParticipante(participanteLogado.getId());
-                    DefaultTableModel model = (DefaultTableModel) table.getModel();
-                    model.setRowCount(0); // Limpa a tabela
 
                     for (InscricaoDAO.InscricaoInfo inscricao : updatedInscricoes) {
                         model.addRow(new Object[]{
                                 inscricao.getId(),
                                 inscricao.getEvento(),
                                 inscricao.getAtividade(),
-                                inscricao.getValor()
+                                inscricao.getValor() != null ? inscricao.getValor() : 0.0
                         });
                     }
-                } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(panel,
-                            "Erro ao registrar pagamento: " + ex.getMessage(),
-                            "Erro", JOptionPane.ERROR_MESSAGE);
-                } catch (PagamentoInvalidoException | EntidadeNaoEncontradaException ex) {
-                    JOptionPane.showMessageDialog(panel,
-                            ex.getMessage(),
-                            "Erro", JOptionPane.ERROR_MESSAGE);
                 }
+            } catch (SQLException | PagamentoInvalidoException | EntidadeNaoEncontradaException ex) {
+                JOptionPane.showMessageDialog(panel,
+                        "Erro ao registrar pagamento: " + ex.getMessage(),
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(panel,
+                        "Erro inesperado: " + ex.getMessage(),
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         });
 
